@@ -1,0 +1,54 @@
+<?php
+require_once "pdo.php";
+  session_start();
+  if(isset($_SESSION["account"] ) ){
+    header('Location: app.php' );# redirecting to app.php
+    return ;
+  }
+  if(isset($_POST["account" ] ) && isset($_POST["pw"] ) ){
+      unset($_SESSION["account" ] );
+      if($_POST["account"] == '' ){
+          $_SESSION["error"] = 'Cannot leave username empty';
+          header('Location: login_user.php' );
+          return ;
+      }
+      $sql ='SELECT passwd FROM user  WHERE userid = :account';
+      $stmt = $pdo->prepare($sql);
+      $stmt->bindParam(':account' , $_POST['account']  , PDO::PARAM_STR ) ; ##array(':account' => $_POST['account'] ) ;
+      $stmt->execute();
+      $org_pw = $stmt->fetch(PDO::FETCH_ASSOC);
+      if(    ($org_pw )  &&   ($org_pw['passwd'] == $_POST["pw"] )     ){
+        $_SESSION["account"] = $_POST["account" ];
+        $_SESSION["success"] = "Logged in.";
+        header('Location: app.php' );
+        return ;
+      }
+      else{
+         $_SESSION["error"] = "Incorrect username/password.";
+         header('Location: login_user.php' );
+         return ;
+      }
+  }
+?>
+<html>
+<body  >
+<h1>User Login </h1>
+<h2> Enter your credentials to Log In</h2>
+<?php
+if(isset($_SESSION["error"] ) ){
+  echo('<p style="color:red"> '.$_SESSION["error"]."</p>\n");
+  unset($_SESSION["error"] );
+}
+if(isset($_SESSION["success" ] ) ){
+  echo('<p style="color:green">'.$_SESSION["success"]."</p>\n");
+  unset($_SESSION["success"] );
+}
+?>
+<form method = "post">
+<p>User Id : <input type = "text" name = "account" value = "" ></p>
+<p>Password: <input type = "text" name = "pw" value = "" ></p>
+<p><input type = "submit" value = "Log In" >
+<a href= "app.php" > Go Back </a> </p>
+</form>
+</body>
+</html>
